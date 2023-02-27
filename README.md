@@ -1,2 +1,2 @@
 # platform_wasm
-support and helpers for various packages on wasm platform
+support and helpers for various packages on wasm platforms ( pygbag, pyodide ... )
