@@ -20,11 +20,10 @@ if sys.platform == "emscripten":
 # TODO: https://toji.dev/webgpu-best-practices/img-textures
 
 
-
     class Camera:
         cam = platform.window.MM.camera
 
-        def __init__(self, device, size, format):
+        def __init__(self, device, size, format=""):
             self.device = device
             self.width, self.height = size
             self.format = format
@@ -39,6 +38,9 @@ if sys.platform == "emscripten":
         # queue a image request and pretend we have already the image.
         def query_image(self):
             return platform.window.MM.camera.query_image()
+
+        def get_controls(self):
+            return (False, False, 0)
 
         def get_image(self, surface = None ):
             if surface:
