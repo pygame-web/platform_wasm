@@ -171,7 +171,7 @@ def patch_pygame_mixer_music_set_volume(vol: float):
         return
     if vol > 1:
         vol = 1.0
-    trackid = tracks["current"]
+    trackid = window.MM.current_trackid or tracks["current"]
     if trackid:
         window.MM.set_volume(trackid, vol)
     else:
@@ -200,21 +200,48 @@ def patch_pygame_mixer_music_play(loops=0, start=0.0, fade_ms=0):
 
 pygame.mixer.music.play = patch_pygame_mixer_music_play
 
+def patch_pygame_mixer_music_get_pos():
+    trackid = window.MM.current_trackid or tracks["current"]
+    if trackid:
+        return int( 1000 * float(window.MM.get_pos(trackid)))
+    return -1
+
+pygame.mixer.music.get_pos = patch_pygame_mixer_music_get_pos
+
+
+def patch_pygame_mixer_music_queue(fileobj, namehint="", loops=0) -> None:
+    window.MM.next = str(fileobj)
+    window.MM.next_hint = str(namehint)
+    window.MM.next_loops = int(loops)
+
+    tid = tracks.get(fileobj, None)
+
+    # track was never loaded before
+    if tid is None:
+        track = patch_pygame_mixer_sound(fileobj, auto=False)
+        tid = track.trackid
+
+    window.MM.next_tid = tid
+
+
+pygame.mixer.music.queue = patch_pygame_mixer_music_queue
+
+
 
 def patch_pygame_mixer_music_pause():
-    last = tracks["current"]
+    last = window.MM.current_trackid or tracks["current"]
     if last:
         window.MM.pause(last)
 
 
 def patch_pygame_mixer_music_unpause():
-    last = tracks["current"]
+    last = window.MM.current_trackid or tracks["current"]
     if last:
         window.MM.unpause(last)
 
 
 def patch_pygame_mixer_music_stop():
-    last = tracks["current"]
+    last = window.MM.current_trackid or tracks["current"]
     if last:
         window.MM.stop(last)
 
