@@ -15,9 +15,9 @@ import aio.gthread
 from threading import Thread
 
 # =================================================
+# original module
 
-
-pygame = sys.modules["pygame"]
+import pygame
 
 # ====================================================================
 # replace non working native function.
@@ -200,11 +200,13 @@ def patch_pygame_mixer_music_play(loops=0, start=0.0, fade_ms=0):
 
 pygame.mixer.music.play = patch_pygame_mixer_music_play
 
+
 def patch_pygame_mixer_music_get_pos():
     trackid = window.MM.current_trackid or tracks["current"]
     if trackid:
-        return int( 1000 * float(window.MM.get_pos(trackid)))
+        return int(1000 * float(window.MM.get_pos(trackid)))
     return -1
+
 
 pygame.mixer.music.get_pos = patch_pygame_mixer_music_get_pos
 
@@ -225,7 +227,6 @@ def patch_pygame_mixer_music_queue(fileobj, namehint="", loops=0) -> None:
 
 
 pygame.mixer.music.queue = patch_pygame_mixer_music_queue
-
 
 
 def patch_pygame_mixer_music_pause():
@@ -284,6 +285,9 @@ else:
     pygame.mixer.init = patch_pygame_mixer_init
 
 pygame.mixer.SoundPatch = patch_pygame_mixer_SoundPatch
+
+# ====================================================================
+import platform_wasm.pygame.vidcap
 
 
 # ====================================================================

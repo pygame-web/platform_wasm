@@ -13,12 +13,10 @@ if sys.platform == "emscripten":
     def get_backends() -> [str]:
         return ["html5"]
 
-
     def list_cameras() -> [int]:
         return ["/dev/video0"]
 
-# TODO: https://toji.dev/webgpu-best-practices/img-textures
-
+    # TODO: https://toji.dev/webgpu-best-practices/img-textures
 
     class Camera:
         cam = platform.window.MM.camera
@@ -30,9 +28,7 @@ if sys.platform == "emscripten":
             self.surface = None
 
         async def start(self):
-            status = await platform.jsiter(
-                platform.window.MM.camera.init(self.device, self.width, self.height, 0, self.format)
-            )
+            status = await platform.jsiter(platform.window.MM.camera.init(self.device, self.width, self.height, 0, self.format))
             print(f"camera {self.device=} {status=}")
 
         # queue a image request and pretend we have already the image.
@@ -42,7 +38,7 @@ if sys.platform == "emscripten":
         def get_controls(self):
             return (False, False, 0)
 
-        def get_image(self, surface = None ):
+        def get_image(self, surface=None):
             if surface:
                 ...
             try:
@@ -55,7 +51,6 @@ if sys.platform == "emscripten":
                 ...
             return self.surface
 
-
         def get_raw(self):
             platform.window.MM.camera.get_raw()
 
@@ -64,4 +59,10 @@ else:
     class Camera(pygame.camera.Camera):
         async def start(self):
             ...
+
+pygame.vidcap = sys.modules['platform_wasm.pygame.vidcap']
+sys.modules["pygame.vidcap"] = pygame.vidcap
+
+
+
 
