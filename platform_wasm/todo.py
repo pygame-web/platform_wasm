@@ -7,6 +7,15 @@ def patch():
     global COLS, LINES, CONSOLE
     import platform
 
+    import collections
+    try:
+        collections.Mapping
+    except:
+        import collections.abc
+        collections.Mapping = collections.abc.Mapping
+        collections.Iterable = collections.abc.Iterable
+
+
     if not __UPY__:
         # DeprecationWarning: Using or importing the ABCs from 'collections'
         # instead of from 'collections.abc' is deprecated since Python 3.3
@@ -29,9 +38,6 @@ def patch():
         CONSOLE = platform.window.get_terminal_console()
         LINES = platform.window.get_terminal_lines() - CONSOLE
 
-        os.environ["COLS"] = str(COLS)
-        os.environ["LINES"] = str(LINES)
-
         def patch_os_get_terminal_size(fd=0):
             cols = os.environ.get("COLS", 80)
             lines = os.environ.get("LINES", 25)
@@ -52,84 +58,115 @@ def patch():
         COLS, LINES = os.get_terminal_size()
         CONSOLE = 25
 
+    os.environ["COLS"] = str(COLS)
+    os.environ["LINES"] = str(LINES)
+    os.environ["CONSOLE"] = str(CONSOLE)
 
-    # fake termios module for some wheel imports
-    termios = type(sys)("termios")
-    termios.block2 = [
-        b"\x03",
-        b"\x1c",
-        b"\x7f",
-        b"\x15",
-        b"\x04",
-        b"\x00",
-        b"\x01",
-        b"\x00",
-        b"\x11",
-        b"\x13",
-        b"\x1a",
-        b"\x00",
-        b"\x12",
-        b"\x0f",
-        b"\x17",
-        b"\x16",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-        b"\x00",
-    ]
+    if not aio.cross.simulator:
+        # fake termios module for some wheel imports
+        termios = type(sys)("termios")
+        termios.block2 = [
+            b"\x03",
+            b"\x1c",
+            b"\x7f",
+            b"\x15",
+            b"\x04",
+            b"\x00",
+            b"\x01",
+            b"\x00",
+            b"\x11",
+            b"\x13",
+            b"\x1a",
+            b"\x00",
+            b"\x12",
+            b"\x0f",
+            b"\x17",
+            b"\x16",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+            b"\x00",
+        ]
 
-    def patch_termios_getattr(*argv):
-        return [17664, 5, 191, 35387, 15, 15, termios.block2]
+        def patch_termios_getattr(*argv):
+            return [17664, 5, 191, 35387, 15, 15, termios.block2]
 
-    def patch_termios_set_raw_mode():
-        # assume first set is raw mode
-        embed.warn(f"Term phy COLS : {int(platform.window.get_terminal_cols())}")
-        embed.warn(f"Term phy LINES : {int(platform.window.get_terminal_lines())}")
-        embed.warn(f"Term logical : {patch_os_get_terminal_size()}")
-        # set console scrolling zone
-        embed.warn(f"Scroll zone start at {LINES=}")
-        CSI(f"{LINES+1};{LINES+CONSOLE}r", f"{LINES+2};1H>>> ")
-        platform.window.set_raw_mode(1)
+        def patch_termios_set_raw_mode():
 
-    def patch_termios_setattr(*argv):
-        if not termios.state:
-            patch_termios_set_raw_mode()
-        else:
-            embed.warn("RESETTING TERMINAL")
+            def ESC(*argv):
+                for arg in argv:
+                    sys.__stdout__.write(chr(0x1B))
+                    sys.__stdout__.write(arg)
+                try:
+                    embed.flush()
+                except:
+                    sys.stdout.flush()
+                    sys.stderr.flush()
 
-        termios.state += 1
-        pass
+            def CSI(*argv):
+                for arg in argv:
+                    ESC(f"[{arg}")
 
-    termios.set_raw_mode = patch_termios_set_raw_mode
-    termios.state = 0
-    termios.tcgetattr = patch_termios_getattr
-    termios.tcsetattr = patch_termios_setattr
-    termios.TCSANOW = 0x5402
-    termios.TCSAFLUSH = 0x5410
-    termios.ECHO = 8
-    termios.ICANON = 2
-    termios.IEXTEN = 32768
-    termios.ISIG = 1
-    termios.IXON = 1024
-    termios.IXOFF = 4096
-    termios.ICRNL = 256
-    termios.INLCR = 64
-    termios.IGNCR = 128
-    termios.VMIN = 6
+            # assume first set is raw mode
+            try:
+                from embed import warn
+            except:
+                warn = print
+            cols = int( os.environ.get("COLS", 80) )
+            lines = int( os.environ.get("LINES", 25) )
 
-    sys.modules["termios"] = termios
+            warn(f"Term phy COLS : {cols}")
+            warn(f"Term phy LINES : {lines}")
+            warn(f"Term logical : {os.get_terminal_size()}")
+            # set console scrolling zone
+            warn(f"Scroll zone start at {LINES=}")
+            CSI(f"{LINES+1};{LINES+CONSOLE}r", f"{LINES+2};1H>>> ")
+            platform.window.set_raw_mode(1)
+
+        def patch_termios_setattr(*argv):
+            if not termios.state:
+                patch_termios_set_raw_mode()
+            else:
+                print("RESETTING TERMINAL")
+
+            termios.state += 1
+            pass
+
+        termios.set_raw_mode = patch_termios_set_raw_mode
+        termios.tcgetattr = patch_termios_getattr
+        termios.tcsetattr = patch_termios_setattr
+
+        termios.state = 0
+        termios.TCSANOW = 0x5402
+        termios.TCSAFLUSH = 0x5410
+        termios.ECHO = 8
+        termios.ICANON = 2
+        termios.IEXTEN = 32768
+        termios.ISIG = 1
+        termios.IXON = 1024
+        termios.IXOFF = 4096
+        termios.ICRNL = 256
+        termios.INLCR = 64
+        termios.IGNCR = 128
+        termios.VMIN = 6
+
+        sys.modules["termios"] = termios
+
+    # // termios
+
+
 
     # pyodide emulation
     # TODO: implement loadPackage()/pyimport()
@@ -191,9 +228,7 @@ def patch():
         "pygame.base": patch_pygame,
     }
 
-    print("195: patches loaded :", list(platform.patches.keys()) )
-
-
+    return platform.patches
 
 # ======================================================
 # emulate pyodide display() cmd
