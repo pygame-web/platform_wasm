@@ -60,9 +60,6 @@ else:
         async def start(self):
             ...
 
-pygame.vidcap = sys.modules['platform_wasm.pygame.vidcap']
+
+pygame.vidcap = sys.modules["platform_wasm.pygame.vidcap"]
 sys.modules["pygame.vidcap"] = pygame.vidcap
-
-
-
-

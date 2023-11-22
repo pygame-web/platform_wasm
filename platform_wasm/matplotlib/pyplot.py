@@ -1,6 +1,7 @@
 import matplotlib
 import matplotlib.pyplot
 
+
 def patch_matplotlib_pyplot_show(*args, **kwargs):
     import pygame
     import matplotlib.pyplot
@@ -18,14 +19,16 @@ def patch_matplotlib_pyplot_show(*args, **kwargs):
     screen.blit(surf, (0, 0))
     pygame.display.update()
 
+
 matplotlib.pyplot.show = patch_matplotlib_pyplot_show
 
 matplotlib.pyplot.__pause__ = matplotlib.pyplot.pause
+
 
 def patch_matplotlib_pyplot_pause(interval):
     matplotlib.pyplot.__pause__(0.0001)
     patch_matplotlib_pyplot_show()
     return asyncio.sleep(interval)
 
-matplotlib.pyplot.pause = patch_matplotlib_pyplot_pause
 
+matplotlib.pyplot.pause = patch_matplotlib_pyplot_pause
