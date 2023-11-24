@@ -16,6 +16,7 @@ import textual._xterm_parser
 
 __WASM__ = sys.platform in ("emscripten", "wasi")
 
+
 class HeadlessDriver(textual.driver.Driver):
     def send_event(self, event: textual.events.Event) -> None:
         self._loop.create_task(self._app._post_message(event))
@@ -33,9 +34,6 @@ class HeadlessDriver(textual.driver.Driver):
         import tty
         import platform
 
-        loop = asyncio.get_running_loop()
-        loop.create_task(self.input_handler())
-
         stdin = sys.stdin.fileno()
         self.stdin = stdin
         self.attrs_before = termios.tcgetattr(stdin)
@@ -45,21 +43,31 @@ class HeadlessDriver(textual.driver.Driver):
         attrs_raw[tty.CC][termios.VMIN] = 1
 
         termios.tcsetattr(stdin, termios.TCSANOW, attrs_raw)
+
+        self._enable_mouse_support()
+
         try:
             platform.window.set_raw_mode(1)
         except:
             ...
-        self._enable_mouse_support()
+
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.input_handler())
 
     if __WASM__ and not aio.cross.simulator:
-        flush = __import__('embed').flush
+
+        def flush(self):
+            __import__("embed").flush()
+
     else:
+
         def flush(self):
             sys.__stdout__.flush()
 
     def _enable_mouse_support(self) -> None:
         if __WASM__:
             import platform
+
             platform.window.console.warn("""Enable reporting of mouse events.""")
 
         write = self.write
@@ -74,6 +82,7 @@ class HeadlessDriver(textual.driver.Driver):
     def _disable_mouse_support(self) -> None:
         if __WASM__:
             import platform
+
             platform.window.console.warn("""Disable reporting of mouse events.""")
 
         write = self.write
@@ -86,15 +95,17 @@ class HeadlessDriver(textual.driver.Driver):
     def disable_input(self) -> None:
         if __WASM__:
             import platform
+
             platform.window.console.warn("""Disabling input.""")
 
     def stop_application_mode(self) -> None:
         import termios
+
         termios.tcsetattr(self.stdin, termios.TCSANOW, self.attrs_before)
         self._disable_mouse_support()
 
     async def input_handler(self):
-        import sys, os, select
+        import asyncio, sys, os, select
 
         import textual._xterm_parser
 
@@ -106,9 +117,12 @@ class HeadlessDriver(textual.driver.Driver):
         parser = textual._xterm_parser.XTermParser(more_data, debug=self._debug)
 
         import platform
+
         platform.window.console.log(f"{parser=}")
 
-        while not aio.exit:
+        loop = asyncio.get_running_loop()
+
+        while not loop.is_closed():
             await asyncio.sleep(0)
             if select.select([STDIN], [], [], 0)[0]:
                 try:
@@ -122,4 +136,3 @@ class HeadlessDriver(textual.driver.Driver):
 
 
 textual.drivers.headless_driver.HeadlessDriver = HeadlessDriver
-

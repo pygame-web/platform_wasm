@@ -1,11 +1,13 @@
 import sys
 import asyncio
 
+
 # ======================================================
 def patch():
     global COLS, LINES, CONSOLE
 
     import importlib
+
     importlib.invalidate_caches()
 
     import platform
@@ -91,12 +93,12 @@ def patch():
 
         os.get_terminal_size = patch_os_get_terminal_size
     else:
+
         def ESC(*argv):
             for arg in argv:
                 sys.__stdout__.write(chr(0x1B))
                 sys.__stdout__.write(arg)
             sys.__stdout__.flush()
-
 
         COLS, LINES = os.get_terminal_size()
         CONSOLE = 25
@@ -105,6 +107,7 @@ def patch():
     try:
         CSI
     except:
+
         def CSI(*argv):
             for arg in argv:
                 ESC(f"[{arg}")
@@ -158,7 +161,6 @@ def patch():
         def patch_termios_getattr(*argv):
             return [17664, 5, 191, 35387, 15, 15, termios.block2]
 
-
         termios.TCSANOW = 0x5402
         termios.TCSAFLUSH = 0x5410
         termios.ECHO = 8
@@ -177,6 +179,7 @@ def patch():
         sys.modules["termios"] = termios
     else:
         import termios
+
         termios.old_tcsetattr = termios.tcsetattr
 
     termios.state = 0
@@ -201,6 +204,7 @@ def patch():
             CSI(f"{LINES+1};{LINES+CONSOLE}r", f"{LINES+2};1H>>> ")
 
             import platform
+
             try:
                 platform.window.set_raw_mode(1)
             except:
@@ -291,7 +295,7 @@ def patch():
         "panda3d": patch_panda3d_showbase,
         "wcwidth": patch_cwcwidth,
         "pygame.base": patch_pygame,
-        "textual" : patch_textual,
+        "textual": patch_textual,
     }
 
     return platform.patches
