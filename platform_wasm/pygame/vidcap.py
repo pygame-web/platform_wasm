@@ -7,8 +7,9 @@ from pygame.camera import *
 
 del Camera
 
-if sys.platform == "emscripten":
-    import platform
+import platform
+
+if sys.platform in ("emscripten",) and platform.is_browser:
 
     def get_backends() -> [str]:
         return ["html5"]

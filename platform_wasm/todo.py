@@ -1,10 +1,13 @@
 import sys
 import asyncio
+import os
+import select
+import builtins
 
 
 # ======================================================
 def patch():
-    global COLS, LINES, CONSOLE
+    global COLUMNS, LINES, CONSOLE
 
     import importlib
 
@@ -47,14 +50,13 @@ def patch():
     # stdin maybe not be a tty, select may not work on stdin
 
     if not aio.cross.simulator:
+        import platform
 
         def ESC(*argv):
             for arg in argv:
                 sys.__stdout__.write(chr(0x1B))
                 sys.__stdout__.write(arg)
-            embed.flush()
-
-        from platform import window
+            platform.flush()
 
         __select = select.select
 
@@ -62,22 +64,22 @@ def patch():
             global __select
             # stdin
             if rlist[0] == 0:
-                return [embed.stdin_select()]
+                return [platform.stdin_select()]
             return __select(rlist, wlist, xlist, timeout)
 
         select.select = patch_select
 
         def patch_os_read(fd, sz):
-            return embed.os_read()
+            return platform.os_read()
 
         os.read = patch_os_read
 
-        COLS = platform.window.get_terminal_cols()
+        COLUMNS = platform.window.get_terminal_cols()
         CONSOLE = platform.window.get_terminal_console()
         LINES = platform.window.get_terminal_lines() - CONSOLE
 
         def patch_os_get_terminal_size(fd=0):
-            cols = os.environ.get("COLS", 80)
+            cols = os.environ.get("COLUMNS", 80)
             lines = os.environ.get("LINES", 25)
             try:
                 res = (
@@ -100,8 +102,18 @@ def patch():
                 sys.__stdout__.write(arg)
             sys.__stdout__.flush()
 
-        COLS, LINES = os.get_terminal_size()
+        COLUMNS, LINES = os.get_terminal_size()
         CONSOLE = 25
+
+    def patch_os_get_console_size(fd=0):
+        global CONSOLE
+        console = os.environ.get("CONSOLE", CONSOLE)
+        try:
+            return int(console)
+        except:
+            return int(CONSOLE)
+
+    os.get_console_size = patch_os_get_console_size
 
     # do not override platform
     try:
@@ -116,7 +128,7 @@ def patch():
         builtins.ESC = ESC
         builtins.CSI = CSI
 
-    os.environ["COLS"] = str(COLS)
+    os.environ["COLUMNS"] = str(COLUMNS)
     os.environ["LINES"] = str(LINES)
     os.environ["CONSOLE"] = str(CONSOLE)
 
@@ -186,19 +198,18 @@ def patch():
 
     def patch_termios_setattr(*argv):
         def patch_termios_set_raw_mode(mode):
-            import os
-
             # assume first set is raw mode
             try:
                 from embed import warn
             except:
                 warn = print
-            cols = int(os.environ.get("COLS", 80))
+            cols = int(os.environ.get("COLUMNS", 80))
             lines = int(os.environ.get("LINES", 25))
+            console = int(os.environ.get("CONSOLE", 32 - 25))
 
-            warn(f"Term phy COLS : {cols}")
-            warn(f"Term phy LINES : {lines}")
+            warn(f"Term phy COLUMNS : {cols} LINES : {lines}  virt console : {console}")
             warn(f"Term logical : {os.get_terminal_size()}")
+
             # set console scrolling zone
             warn(f"Scroll zone start at {LINES=}")
             CSI(f"{LINES+1};{LINES+CONSOLE}r", f"{LINES+2};1H>>> ")
@@ -253,19 +264,34 @@ def patch():
 
     # patch builtins input()
     async def async_input(prompt=""):
-        shell.is_interactive = False
+        import platform
+
+        platform.shell.is_interactive = False
+
+        maybe = ""
         if prompt:
             print(prompt, end="")
-        maybe = ""
-        while not len(maybe):
-            maybe = embed.readline()
-            await asyncio.sleep(0)
+        elif aio.async_input_filters:
+            for aif in aio.async_input_filters:
+                maybe = aif()
+                if maybe:
+                    break
 
-        shell.is_interactive = True
+        while not len(maybe):
+            await asyncio.sleep(0)
+            maybe = platform.readline()
+
+        platform.shell.is_interactive = True
         return maybe.rstrip("\n")
 
-    import builtins
+    try:
+        aio.async_input_filters
+    except:
+        aio.async_input_filters = []
 
+    aio.async_input = async_input
+
+    # TODO detect when await is missing or ctx not async
     builtins.input = async_input
 
     #

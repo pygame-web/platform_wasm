@@ -3,6 +3,7 @@ import matplotlib.pyplot
 
 
 def patch_matplotlib_pyplot_show(*args, **kwargs):
+    import platform
     import pygame
     import matplotlib.pyplot
     import matplotlib.backends.backend_agg
@@ -14,7 +15,7 @@ def patch_matplotlib_pyplot_show(*args, **kwargs):
     raw_data = renderer.tostring_rgb()
     size = canvas.get_width_height()
 
-    screen = shell.pg_init()
+    screen = platform.shell.pg_init()
     surf = pygame.image.fromstring(raw_data, size, "RGB")
     screen.blit(surf, (0, 0))
     pygame.display.update()
