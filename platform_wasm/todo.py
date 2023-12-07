@@ -212,7 +212,7 @@ def patch():
 
             # set console scrolling zone
             warn(f"Scroll zone start at {LINES=}")
-            CSI(f"{LINES+1};{LINES+CONSOLE}r", f"{LINES+2};1H>>> ")
+            CSI(f"{LINES+1};{LINES+CONSOLE}r", f"{LINES+2};1H>T> ")
 
             import platform
 
