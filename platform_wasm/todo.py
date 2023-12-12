@@ -58,14 +58,17 @@ def patch():
                 sys.__stdout__.write(arg)
             platform.flush()
 
-        __select = select.select
+        import select
+
+        select.__select = select.select
 
         def patch_select(rlist, wlist, xlist, timeout=None, /):
-            global __select
             # stdin
-            if rlist[0] == 0:
-                return [platform.stdin_select()]
-            return __select(rlist, wlist, xlist, timeout)
+            if not isinstance(rlist, set):
+                if rlist[0] == 0:
+                    return [platform.stdin_select()]
+
+            return select.__select(rlist, wlist, xlist, timeout)
 
         select.select = patch_select
 
