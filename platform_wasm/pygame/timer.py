@@ -81,7 +81,12 @@ def patch_set_timer(arg: Union[int, pygame.event.Event], millis: int, loops: int
         loop_counter = 0
         while True:
             await asyncio.sleep(dlay)
-            if event_loop.is_closed() or event not in THREADS or THREADS[event] != thread_uuid or (loops and loop_counter >= loops):
+            if (
+                event_loop.is_closed()
+                or event not in THREADS
+                or THREADS[event] != thread_uuid
+                or (loops and loop_counter >= loops)
+            ):
                 break
 
             pygame.event.post(cevent)
