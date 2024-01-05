@@ -108,7 +108,7 @@ def patch():
         COLUMNS, LINES = os.get_terminal_size()
         CONSOLE = 25
 
-    def patch_os_get_console_size(fd=0):
+    def patch_get_console_size(fd=0):
         global CONSOLE
         console = os.environ.get("CONSOLE", CONSOLE)
         try:
@@ -116,7 +116,7 @@ def patch():
         except:
             return int(CONSOLE)
 
-    os.get_console_size = patch_os_get_console_size
+    platform.get_console_size = patch_get_console_size
 
     # do not override platform
     try:
