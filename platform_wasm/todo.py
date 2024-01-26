@@ -113,11 +113,12 @@ def patch():
 
     def patch_get_console_size(fd=0):
         global CONSOLE
-        console = os.environ.get("CONSOLE", CONSOLE)
+        CONSOLE = os.environ.get("CONSOLE", CONSOLE)
         try:
-            return int(console)
-        except:
             return int(CONSOLE)
+        except:
+            CONSOLE = "5"
+        return int(CONSOLE)
 
     platform.get_console_size = patch_get_console_size
 
