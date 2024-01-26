@@ -52,6 +52,9 @@ def patch():
     if not aio.cross.simulator:
         import platform
 
+        sys.stdout.flush = platform.flush
+
+
         def ESC(*argv):
             for arg in argv:
                 sys.__stdout__.write(chr(0x1B))
