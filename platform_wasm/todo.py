@@ -117,7 +117,7 @@ def patch():
         try:
             return int(CONSOLE)
         except:
-            CONSOLE = "5"
+            CONSOLE = 5
         return int(CONSOLE)
 
     platform.get_console_size = patch_get_console_size
@@ -212,14 +212,14 @@ def patch():
                 warn = print
             cols = int(os.environ.get("COLUMNS", 80))
             lines = int(os.environ.get("LINES", 25))
-            console = int(os.environ.get("CONSOLE", 32 - 25))
+            console = int(os.environ.get("CONSOLE", 5))
 
             warn(f"Term phy COLUMNS : {cols} LINES : {lines}  virt console : {console}")
             warn(f"Term logical : {os.get_terminal_size()}")
 
             # set console scrolling zone
             warn(f"Scroll zone start at {LINES=}")
-            CSI(f"{LINES+1};{LINES+CONSOLE}r", f"{LINES+2};1H>T> ")
+            CSI(f"{lines+1};{lines+console}r", f"{lines+2};1H>T> ")
 
             import platform
 
