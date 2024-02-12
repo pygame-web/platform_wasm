@@ -11,8 +11,8 @@ try:
     panda3d.core.get_model_path().append_directory(os.getcwd())
     panda3d.core.loadPrcFileData("", "win-size 1024 600")
     panda3d.core.loadPrcFileData("", "support-threads #f")
-    panda3d.core.loadPrcFileData("", "textures-power-2 down")
-    panda3d.core.loadPrcFileData("", "textures-square down")
+    #panda3d.core.loadPrcFileData("", "textures-power-2 up")
+    #panda3d.core.loadPrcFileData("", "textures-square up")
     # samples expect that
     panda3d.core.loadPrcFileData("", "default-model-extension .egg")
 

@@ -54,7 +54,6 @@ def patch():
 
         sys.stdout.flush = platform.flush
 
-
         def ESC(*argv):
             for arg in argv:
                 sys.__stdout__.write(chr(0x1B))

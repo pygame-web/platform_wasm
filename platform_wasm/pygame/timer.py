@@ -56,8 +56,7 @@ https://github.com/pygame-web/pygbag/issues/16
 THREADS = {}
 
 
-def patch_set_timer(
-        event: Union[int, pygame.event.Event], millis: int, loops: int = 0):
+def patch_set_timer(event: Union[int, pygame.event.Event], millis: int, loops: int = 0):
     """Patches the pygame.time.set_timer function to use gthreads"""
 
     dlay = float(millis) / 1000
@@ -76,12 +75,7 @@ def patch_set_timer(
         loop_counter = 0
         while True:
             await asyncio.sleep(dlay)
-            if (
-                event_loop.is_closed()
-                or event not in THREADS
-                or THREADS[event] != thread_uuid
-                or (loops and loop_counter >= loops)
-            ):
+            if event_loop.is_closed() or event not in THREADS or THREADS[event] != thread_uuid or (loops and loop_counter >= loops):
                 break
 
             pygame.event.post(cevent)
