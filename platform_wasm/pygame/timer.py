@@ -60,7 +60,10 @@ def patch_set_timer(event: Union[int, pygame.event.Event], millis: int, loops: i
     """Patches the pygame.time.set_timer function to use gthreads"""
 
     dlay = float(millis) / 1000
-    cevent = pygame.event.Event(event)
+    if isinstance(event, pygame.event.Event):
+        cevent = event
+    else:
+        cevent = pygame.event.Event(int(event))
     event_loop = asyncio.get_event_loop()
 
     async def fire_event(thread_uuid):
