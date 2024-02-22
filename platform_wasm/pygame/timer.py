@@ -56,15 +56,20 @@ https://github.com/pygame-web/pygbag/issues/16
 THREADS = {}
 
 
-def patch_set_timer(arg: Union[int, pygame.event.Event], millis: int, loops: int = 0):
-    """Patches the pygame.time.set_timer function to use gthreads"""
-
+def patch_set_timer(
+        event: Union[int, pygame.event.Event],
+        millis: int,
+        loops: int = 0):
+    """repeatedly create an event on the event queue
+    
+    Patches the pygame.time.set_timer function to use gthreads
+    """
     dlay = float(millis) / 1000
-    if isinstance(arg, pygame.event.Event):
-        event = int(arg)
-        cevent = arg
+    if isinstance(event, pygame.event.Event):
+        event_type = event.type
+        cevent = event
     else:
-        event = int(arg)
+        event_type = int(event)
         cevent = pygame.event.Event(event)
 
     event_loop = asyncio.get_event_loop()
@@ -81,7 +86,12 @@ def patch_set_timer(arg: Union[int, pygame.event.Event], millis: int, loops: int
         loop_counter = 0
         while True:
             await asyncio.sleep(dlay)
-            if event_loop.is_closed() or event not in THREADS or THREADS[event] != thread_uuid or (loops and loop_counter >= loops):
+            if (
+                event_loop.is_closed()
+                or event_type not in THREADS
+                or THREADS[event_type] != thread_uuid
+                or (loops and loop_counter >= loops)
+            ):
                 break
 
             pygame.event.post(cevent)
@@ -92,12 +102,12 @@ def patch_set_timer(arg: Union[int, pygame.event.Event], millis: int, loops: int
         # stale threads will be terminated
         thread_uuid = uuid.uuid4()
         Thread(target=fire_event, args=[thread_uuid]).start()
-        THREADS[event] = thread_uuid
+        THREADS[event_type] = thread_uuid
 
     else:
         # This cancels the timer for the event
         if event in THREADS:
-            del THREADS[event]
+            del THREADS[event_type]
 
 
 pygame.time.set_timer = patch_set_timer
