@@ -101,9 +101,11 @@ pygame.mixer.music.set_volume = patch_pygame_mixer_music_set_volume
 
 
 def patch_pygame_mixer_music_get_volume():
-    trackid = tracks["current"]
-    return float(window.MM.get_volume(trackid))
-
+    trackid = window.MM.current_trackid or tracks["current"]
+    if trackid:
+        return float(window.MM.get_volume(trackid))
+    else:
+        pdb(__file__, "ERROR 108: no track is loaded")
 
 pygame.mixer.music.get_volume = patch_pygame_mixer_music_get_volume
 
@@ -114,7 +116,7 @@ def patch_pygame_mixer_music_play(loops=0, start=0.0, fade_ms=0):
         window.MM.pause(trackid)
         window.MM.play(trackid, loops)
     else:
-        pdb(__file__, "ERROR 184: no track is loaded")
+        pdb(__file__, "ERROR 119: no track is loaded")
 
 
 pygame.mixer.music.play = patch_pygame_mixer_music_play
