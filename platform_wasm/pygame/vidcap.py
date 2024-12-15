@@ -58,8 +58,7 @@ if sys.platform in ("emscripten",) and platform.is_browser:
 else:
 
     class Camera(pygame.camera.Camera):
-        async def start(self):
-            ...
+        async def start(self): ...
 
 
 pygame.vidcap = sys.modules["platform_wasm.pygame.vidcap"]

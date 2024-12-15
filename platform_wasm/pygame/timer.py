@@ -56,12 +56,9 @@ https://github.com/pygame-web/pygbag/issues/16
 THREADS = {}
 
 
-def patch_set_timer(
-        event: Union[int, pygame.event.Event],
-        millis: int,
-        loops: int = 0):
+def patch_set_timer(event: Union[int, pygame.event.Event], millis: int, loops: int = 0):
     """repeatedly create an event on the event queue
-    
+
     Patches the pygame.time.set_timer function to use gthreads
     """
     dlay = float(millis) / 1000

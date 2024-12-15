@@ -59,7 +59,7 @@ if platform.is_browser:
     __pygame_display_set_mode__ = pygame.display.set_mode
 
     def patch_pygame_display_set_mode(size=(0, 0), flags=0, depth=0, display=0, vsync=0):
-        # apparently no need to remove scaled.
+
         if size != (0, 0):
             if (sys.platform == "emscripten") and platform.is_browser:
                 try:
@@ -67,7 +67,22 @@ if platform.is_browser:
                 except:
                     print("ERROR: browser host does not provide platform.window_resize() function", file=sys.__stderr__)
 
-        return __pygame_display_set_mode__(size, flags, depth, display, vsync)
+        # apparently no need to remove scaled.
+        if flags or vsync or depth:
+
+            if flags & pygame.OPENGL:
+                print(f"3D CONTEXT ! {size=}, {flags=}, {depth=}, {display=}, {vsync=}")
+                flags = pygame.OPENGL
+            else:
+                print(f"{size=}, {flags=}, {depth=}, {display=}, {vsync=}")
+                flags = 0
+            depth = 0
+            vsync = 0
+        try:
+            return __pygame_display_set_mode__(size, flags, depth, display, vsync)
+        except:
+
+            raise
 
     pygame.display.set_mode = patch_pygame_display_set_mode
 

@@ -107,6 +107,7 @@ def patch_pygame_mixer_music_get_volume():
     else:
         pdb(__file__, "ERROR 108: no track is loaded")
 
+
 pygame.mixer.music.get_volume = patch_pygame_mixer_music_get_volume
 
 
@@ -130,6 +131,13 @@ def patch_pygame_mixer_music_get_pos():
 
 
 pygame.mixer.music.get_pos = patch_pygame_mixer_music_get_pos
+
+def patch_pygame_mixer_music_get_busy():
+    # TODO
+    #return false when paused
+    return patch_pygame_mixer_music_get_pos() > 0
+
+pygame.mixer.music.get_busy = patch_pygame_mixer_music_get_busy
 
 
 def patch_pygame_mixer_music_queue(fileobj, namehint="", loops=0) -> None:
