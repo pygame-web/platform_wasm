@@ -326,7 +326,8 @@ def patch():
         "matplotlib": patch_matplotlib_pyplot,
         "panda3d": patch_panda3d_showbase,
         "wcwidth": patch_cwcwidth,
-        "pygame.base": patch_pygame,
+        "pygame": patch_pygame,
+        "pygame_ce": patch_pygame,
         "textual": patch_textual,
     }
 

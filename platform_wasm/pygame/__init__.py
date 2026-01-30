@@ -59,7 +59,6 @@ if platform.is_browser:
     __pygame_display_set_mode__ = pygame.display.set_mode
 
     def patch_pygame_display_set_mode(size=(0, 0), flags=0, depth=0, display=0, vsync=0):
-
         if size != (0, 0):
             if (sys.platform == "emscripten") and platform.is_browser:
                 try:
@@ -81,7 +80,6 @@ if platform.is_browser:
         try:
             return __pygame_display_set_mode__(size, flags, depth, display, vsync)
         except:
-
             raise
 
     pygame.display.set_mode = patch_pygame_display_set_mode
